@@ -23,6 +23,7 @@
 
     $(document).ready(function(){
       // get_definition();
+      get_examples();
     });
     function get_definition(){
       let api_key = 'ce8fec5a-0280-41e8-9e8e-88d8b3f0f6df'
@@ -109,6 +110,71 @@
         }
       })
     }
+
+    function get_examples(){
+      let list =  $("#example-list");
+      list.empty();
+      $.ajax({
+        type : 'GET',
+        url : `/api/get_exs?word=${word}`,
+        data : {},
+        success : function(response){
+          console.log(response)
+          if (response.result === 'success'){
+            let examples = response.examples;
+            let temp_html = '';
+            for (let i = 0; i < examples.length; i++){
+              let example = examples[i];
+              let id = example.id;
+              let sentence = example.example;
+              temp_html += `
+                <li>${sentence}&nbsp;&nbsp;&nbsp;<a
+                href="javascript:delete_ex('${id}')">delete</a></li>
+              `;
+            }
+            list.append(temp_html);
+          }
+        }
+      });
+    }
+
+    function add_ex(){
+      let new_ex = $('#new-example').val();
+      $.ajax({
+        type : 'POST',
+        url : `/api/save_ex`,
+        data : {
+          example : new_ex,
+          word : word
+        },
+        success : function(response){
+          console.log(response)
+          if (response.result === 'success'){
+            alert(response.msg)
+            get_examples()
+          }
+          
+        }
+      });
+    }
+
+    function delete_ex(id){
+      console.log("deleteing", id)
+      $.ajax({
+        type : 'POST',
+        url : `/api/delete_ex`,
+        data : {
+          word : word,
+          id : id
+        },
+        success : function(response){
+          if (response.result === 'success'){
+            alert(response.msg)
+            get_examples()
+          }
+        }
+      });
+    }
   </script>
   </head>
   <body>
@@ -150,6 +216,19 @@
           <button onclick="delete_word()" id="btn-delete" class="btn btn-sparta btn-lg">
             Delete
           </button>
+
+
+          <div id="examples" class="container">
+            <h3 style="text-align: center; margin-bottom: 1rem;">write your own sentences!</h3>
+            <ul id="example-list">
+
+            </ul>
+            <div class="d-flex justify-content-between" style="margin-left:20px;">
+              <input id="new-example" class="form-control form-control-sm" style="margin-right: 20px;">
+              <button class="btn btn-outline-secondary btn-sm" onclick="add_ex()">add</button>
+            </div>
+          </div>
+
         {% endif %}
       </div>
     </div>
